@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { InputHandler } from "./InputHandler";
 import { CollisionBody, CollisionSystem } from "./CollisionSystem";
 import { FlatCollisionSystem } from "./FlatCollisionSystem";
+import { publicAssetUrl } from "./assets";
 //import { FBXLoader } from "three/examples/jsm/Addons.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
@@ -62,7 +63,7 @@ export class Player{
         const initialNormal = new THREE.Vector3(0,1,0); //North pole
         this.mesh.position.copy(initialNormal.multiplyScalar(this.planetRadius + 0.5));
 
-        this.loadModel('/models/Chibbi.glb');
+        this.loadModel(publicAssetUrl('/models/Chibbi.glb'));
 
         if (collisionSystem) {
             this.collisionBody = collisionSystem.addSphere(
@@ -79,7 +80,7 @@ export class Player{
         const loader = new GLTFLoader();
         const textureLoader = new THREE.TextureLoader();
 
-        const playerTexture = textureLoader.load('/textures/ChibiKnight.png');
+        const playerTexture = textureLoader.load(publicAssetUrl('/textures/ChibiKnight.png'));
 
         playerTexture.colorSpace = THREE.SRGBColorSpace;
         playerTexture.flipY = false;

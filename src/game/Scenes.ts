@@ -5,6 +5,7 @@ import { House, HouseContent } from './entities/House';
 import { NPC } from './entities/NPC';
 import { Platform } from './entities/Platform';
 import { plane } from 'three/examples/jsm/Addons.js';
+import { publicAssetUrl } from './assets';
 
 export type { NPCData } from './entities/NPC';
 export type { HouseContent } from './entities/House';
@@ -37,7 +38,7 @@ export function setupOverworldScene(scene: THREE.Scene, collisionSystem: Collisi
   const textureLoader = new THREE.TextureLoader();
 
   //Lade das Bild aus dem Public-Ordner
-  const planetTexture = textureLoader.load('/textures/rocky_terrain_02_diff_4k.jpg');
+  const planetTexture = textureLoader.load(publicAssetUrl('/textures/rocky_terrain_02_diff_4k.jpg'));
 
   //Passen Sie den Farbraum an, um lebendigere Farben zu erzielen
   planetTexture.colorSpace = THREE.SRGBColorSpace;
