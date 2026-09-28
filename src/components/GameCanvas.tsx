@@ -51,6 +51,7 @@ export default function GameCanvas() {
     const collisionSystem = new CollisionSystem();
     const player = new Player(collisionSystem);
     const cameraController = new CameraController(mainCam, containerRef.current);
+    const clock = new THREE.Timer();
 
     cameraControllerRef.current = cameraController;
 
@@ -110,10 +111,15 @@ export default function GameCanvas() {
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
+      clock.update();
+      const delta = clock.getDelta();
+
       if (sceneState !== 'MENU') {
 
         if (!isDialogueActiveRef.current) {
-          player.update(input, cameraController.yaw, mainCam);
+          player.update(input, cameraController.yaw, mainCam, delta);
+        } else {
+          player.update(null, cameraController.yaw, mainCam, delta);
         }
         cameraController.update(player.mesh.position);
 

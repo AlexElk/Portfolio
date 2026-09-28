@@ -4,6 +4,7 @@ import { FlatBounds } from './FlatCollisionSystem';
 import { House, HouseContent } from './entities/House';
 import { NPC } from './entities/NPC';
 import { Platform } from './entities/Platform';
+import { plane } from 'three/examples/jsm/Addons.js';
 
 export type { NPCData } from './entities/NPC';
 export type { HouseContent } from './entities/House';
@@ -32,6 +33,17 @@ export function setupOverworldScene(scene: THREE.Scene, collisionSystem: Collisi
   const PLANET_RADIUS = 10;
   scene.background = new THREE.Color(0x020208);
 
+  //Textur
+  const textureLoader = new THREE.TextureLoader();
+
+  //Lade das Bild aus dem Public-Ordner
+  const planetTexture = textureLoader.load('/textures/rocky_terrain_02_diff_4k.jpg');
+
+  //Passen Sie den Farbraum an, um lebendigere Farben zu erzielen
+  planetTexture.colorSpace = THREE.SRGBColorSpace;
+  planetTexture.magFilter = THREE.NearestFilter;
+  planetTexture.minFilter = THREE.NearestFilter;
+
   //Stern
   const starsGeo = new THREE.BufferGeometry();
   const count = 1200;
@@ -45,7 +57,7 @@ export function setupOverworldScene(scene: THREE.Scene, collisionSystem: Collisi
 
   //Kugel
   const planetGeo = new THREE.SphereGeometry(PLANET_RADIUS, 64, 64);
-  const planetMat = new THREE.MeshBasicMaterial({color: 0x228b22, wireframe: false, reflectivity: 0.2}) //Roughness here?
+  const planetMat = new THREE.MeshBasicMaterial({map: planetTexture, wireframe: false, reflectivity: 0.2}) //Roughness here?
   const planet = new THREE.Mesh(planetGeo, planetMat);
   scene.add(planet);
   

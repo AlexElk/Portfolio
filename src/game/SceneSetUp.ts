@@ -42,13 +42,13 @@ export function createScene(container: HTMLElement)
     container.appendChild(renderer.domElement);
 
     //Light
-    const light = new THREE.DirectionalLight(0xfff, 1);
+    const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(5,10,7);
-    scene.add(light, new THREE.AmbientLight(0x404040));
+    scene.add(light, new THREE.AmbientLight(0xffffff));
 
     //Suelo
-    const grid = new THREE.GridHelper(20, 20, 0xffffff, 0x444444);
-    scene.add(grid);
+    //const grid = new THREE.GridHelper(20, 20, 0xffffff, 0x444444);
+    //scene.add(grid);
 
     const HandleResize = () => {
         // camera.aspect = VIRTUAL_WIDTH / VIRTUAL_HEIGHT;

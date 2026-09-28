@@ -27,7 +27,7 @@ export class OverworldScene implements IScene{
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(5,10,7);
-        this.scene.add(light, new THREE.AmbientLight(0x404040));
+        this.scene.add(light, new THREE.AmbientLight(0xffffff));
 
         this.player = new Player();
         this.scene.add(this.player.mesh);

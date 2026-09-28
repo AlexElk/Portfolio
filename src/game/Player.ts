@@ -2,8 +2,16 @@ import * as THREE from "three";
 import { InputHandler } from "./InputHandler";
 import { CollisionBody, CollisionSystem } from "./CollisionSystem";
 import { FlatCollisionSystem } from "./FlatCollisionSystem";
+//import { FBXLoader } from "three/examples/jsm/Addons.js";
+import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 export type PlayerMovementMode = 'SPHERICAL' | 'FLAT';
+
+const WALKING_ANIMATION = "LongLegsKnight_Rig|LongLegsKnight_Rig|Knight_Unarmed_Walking";
+const IDLE_ANIMATION = "LongLegsKnight_Rig|LongLegsKnight_Rig|Knight_Unarmed_Idle";
+const JUMP_ANIMATION = "LongLegsKnight_Rig|Knight_Armed_Jump";
+const JUMP_TO_FALL_ANIMATION = "LongLegsKnight_Rig|Knight_Unarmed_JumpToFall";
+const FALL_IDLE_ANIMATION = "LongLegsKnight_Rig|Knight_Unarmed_FallIdle";
 
 export class Player{
     public mesh: THREE.Group;
@@ -23,30 +31,38 @@ export class Player{
     private collisionBody?: CollisionBody;
     private flatCollisionSystem?: FlatCollisionSystem;
 
+    //Animationen
+    private mixer: THREE.AnimationMixer | null = null;
+    private animations: Map<string, THREE.AnimationAction> = new Map();
+    private currentAnimation: string = '';
+    public isLoaded = false;
+
     constructor(collisionSystem?: CollisionSystem){
         this.collisionSystem = collisionSystem;
-        const geometry = new THREE.BoxGeometry(0.8, 1, 0.8);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ee77});
+        // const geometry = new THREE.BoxGeometry(0.8, 1, 0.8);
+        // const material = new THREE.MeshBasicMaterial({ color: 0x00ee77});
 
-        const faceGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.1);
-        const faceMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+        // const faceGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.1);
+        // const faceMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
         
-        const face = new THREE.Mesh(faceGeometry, faceMaterial);
-        face.position.set(0, 0.2, -0.5);
+        // const face = new THREE.Mesh(faceGeometry, faceMaterial);
+        // face.position.set(0, 0.2, -0.5);
 
-        const body = new THREE.Mesh(geometry, material);
-        const visualRoot = new THREE.Group();
-        visualRoot.add(body);
+        // const body = new THREE.Mesh(geometry, material);
+        // const visualRoot = new THREE.Group();
+        // visualRoot.add(body);
         this.mesh = new THREE.Group();
-        body.add(face);
+        // body.add(face);
 
-        const visualBounds = new THREE.Box3().setFromObject(visualRoot);
-        const visualCenter = visualBounds.getCenter(new THREE.Vector3());
-        visualRoot.position.sub(visualCenter);
-        this.mesh.add(visualRoot);
+        // const visualBounds = new THREE.Box3().setFromObject(visualRoot);
+        // const visualCenter = visualBounds.getCenter(new THREE.Vector3());
+        // visualRoot.position.sub(visualCenter);
+        // this.mesh.add(visualRoot);
 
         const initialNormal = new THREE.Vector3(0,1,0); //North pole
         this.mesh.position.copy(initialNormal.multiplyScalar(this.planetRadius + 0.5));
+
+        this.loadModel('/models/Chibbi.glb');
 
         if (collisionSystem) {
             this.collisionBody = collisionSystem.addSphere(
@@ -59,12 +75,121 @@ export class Player{
         }
     }
 
+    private loadModel(url: string) {
+        const loader = new GLTFLoader();
+        const textureLoader = new THREE.TextureLoader();
+
+        const playerTexture = textureLoader.load('/textures/ChibiKnight.png');
+
+        playerTexture.colorSpace = THREE.SRGBColorSpace;
+        playerTexture.flipY = false;
+
+        loader.load(
+            url,
+            (gltf) => {
+                const model = gltf.scene;
+
+                model.scale.setScalar(1);
+                //fbx.scale.setScalar(0.01); // makes it small
+
+                model.rotation.y = Math.PI;
+                //fbx.rotation.y = Math.PI; //When model backwards
+
+                model.updateMatrixWorld(true);
+                const modelBounds = new THREE.Box3().setFromObject(model);
+                model.position.y -= modelBounds.min.y + this.groundHeight;
+
+                model.traverse((child) => {
+                    if ((child as THREE.Mesh).isMesh) {
+                    // child.castShadow = true;
+                    const mesh = child as THREE.Mesh;
+                    //child.receiveShadow = true;
+
+                    mesh.material = new THREE.MeshStandardMaterial({
+                        map: playerTexture,
+                        roughness: 0.8,
+                        metalness: 0.1
+                    });
+                    // const mat = mesh.material as THREE.MeshStandardMaterial;
+
+                    // if (mat) {
+                    //     mat.metalness = 0;   // Quita el efecto espejo
+                    //     mat.roughness = 0.8; // Lo hace mate (menos brillante)
+                    // }
+                    }
+                });
+                // fbx.traverse((child) =>{
+                //     if ((child as THREE.Mesh).isMesh)
+                //     {
+                //         //child.castShadow = true;
+                //         child.receiveShadow = true;
+                //     }
+                // });
+
+                //Den Animationsmixer konfiguriren
+                this.mixer = new THREE.AnimationMixer(model);
+                //this.mixer = new THREE.AnimationMixer(fbx);
+
+                //Alle in der FBX-Datei enthaltenen Animationen Speichern
+                gltf.animations.forEach((clip) => {
+                    const action = this.mixer!.clipAction(clip); //Dieser Wert ist nicht null
+                    this.animations.set(clip.name, action);
+                });
+
+                // //Wenn die Animationen keinen spezifiscehn Namen haben, können Sie sie per Index referenzieren
+                // if (gltf.animations.length > 0){
+                //     const firstAnimName = "LongLegsKnight_Rig|LongLegsKnight_Rig|Knight_Unarmed_Walking";
+                //     //LongLegsKnight_Rig|LongLegsKnight_Rig|Knight_Unarmed_Idle
+                //     //LongLegsKnight_Rig|Knight_Armed_Jump
+                //     //LongLegsKnight_Rig|Knight_Unarmed_JumpToFall
+                //     //LongLegsKnight_Rig|Knight_Unarmed_FallIdle
+                //}
+
+                this.playAnimation(IDLE_ANIMATION);
+
+                this.mesh.add(model);
+                this.isLoaded = true;
+            },
+            (xhr) => {
+                console.log(`Loading Model: ${((xhr.loaded / xhr.total * 100).toFixed(0))}%`);
+            },
+            (error) => {
+                console.error('Error loading the FBX file: ', error);
+            }
+        );
+    }
+
+    private playAnimation(name: string){
+        if (this.currentAnimation === name || !this.animations.has(name)) return;
+
+        const newAction = this.animations.get(name);
+        const oldAction = this.animations.get(this.currentAnimation);
+
+        if (oldAction) {
+            oldAction.fadeOut(0.2); //Sanfter Übergang zwischen den Animationen
+        }
+
+        if (newAction){
+            newAction.reset().fadeIn(0.2).play();
+            this.currentAnimation = name;
+        }
+    }
+
     public setFlatMovement(collisionSystem: FlatCollisionSystem): void {
         this.movementMode = 'FLAT';
         this.flatCollisionSystem = collisionSystem;
     }
 
-    public update(input: InputHandler | null, cameraYaw: number, camera?: THREE.Camera){
+    public update(input: InputHandler | null, cameraYaw: number, camera?: THREE.Camera, delta: number = 0.016){
+        const isMoving = Boolean(
+            input?.keys.w || input?.keys.a || input?.keys.s || input?.keys.d
+        );
+        this.playAnimation(isMoving ? WALKING_ANIMATION : IDLE_ANIMATION);
+
+        if (this.mixer){
+            this.mixer.update(delta);
+        }
+
         if (input?.consumeJumpPress() && this.isGrounded) {
             this.isGrounded = false;
             this.verticalVelocity = this.minimumJumpVelocity;
@@ -168,10 +293,13 @@ export class Player{
                 normal,
                 tangentForward.clone().negate()
             );
+
             const targetQ = new THREE.Quaternion().setFromRotationMatrix(targetMatrix);
             this.mesh.quaternion.slerp(targetQ, 0.2);
         }
     }
+
+    
 
     private updateFlat(input: InputHandler | null, cameraYaw: number): void {
         if (!this.flatCollisionSystem) return;
