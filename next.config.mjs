@@ -7,7 +7,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath,
+  basePath: basePath,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
