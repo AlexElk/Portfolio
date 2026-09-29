@@ -32,17 +32,17 @@ export class CameraController{
         this.inDialog = true;
 
         const midPoint = new THREE.Vector3().addVectors(playerPos, npcPos).multiplyScalar(0.5);
-        this.dialogueLookAt.copy(midPoint).add(new THREE.Vector3(0, 0.8, 0));
+        const surfaceUp = midPoint.clone().normalize();
+        this.dialogueLookAt.copy(midPoint).addScaledVector(surfaceUp, 0.8);
 
-        //Direction Vector and Lateral intersection
-        const dir = new THREE.Vector3().subVectors(npcPos, playerPos).normalize();
-        const sideDir = new THREE.Vector3(-dir.z, 0, dir.x); //Perpendicularity
+        const dir = new THREE.Vector3().subVectors(npcPos, playerPos);
+        dir.addScaledVector(surfaceUp, -dir.dot(surfaceUp)).normalize();
+        const sideDir = new THREE.Vector3().crossVectors(dir, surfaceUp).normalize();
 
-        //Camera to the side and a little up
         this.dialogueCamPos
             .copy(midPoint)
             .add(sideDir.multiplyScalar(3.2))
-            .add(new THREE.Vector3(0, 1.2, 0));
+            .addScaledVector(surfaceUp, 1.2);
     }
 
     public endDialogueMode() {

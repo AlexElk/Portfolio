@@ -26,6 +26,12 @@ export interface WorldOptions {
 export interface WorldBuildResult {
   triggers: InteractionTrigger[];
   npcData: NPCData[];
+  update?: (
+    playerPosition: THREE.Vector3,
+    delta: number,
+    playerIsGrounded: boolean,
+    playerCollisionRadius: number
+  ) => void;
   player?: {
     visible?: boolean;
     spawnPosition?: THREE.Vector3;

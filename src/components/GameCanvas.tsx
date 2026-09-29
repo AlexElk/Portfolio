@@ -41,6 +41,7 @@ export default function GameCanvas() {
   const activeTriggerRef = useRef<InteractionTrigger | null>(null);
   const activeNpcRef = useRef<NPCData | null>(null);
   const activeHouseContentRef = useRef<HouseContent | null>(null);
+  const overworldReturnPositionRef = useRef<THREE.Vector3 | null>(null);
   const isDialogueActiveRef = useRef(false);
 
   useEffect(() => {
@@ -98,6 +99,10 @@ export default function GameCanvas() {
     if (world.player?.spawnPosition) {
       player.mesh.position.copy(world.player.spawnPosition);
     }
+    if (sceneState === 'OVERWORLD' && overworldReturnPositionRef.current) {
+      player.mesh.position.copy(overworldReturnPositionRef.current);
+      overworldReturnPositionRef.current = null;
+    }
     if (world.player?.movement?.type === 'FLAT') {
       player.setFlatMovement(new FlatCollisionSystem(world.player.movement.bounds));
     }
@@ -129,6 +134,7 @@ export default function GameCanvas() {
 
       if (activeTriggerRef.current) {
         if (activeTriggerRef.current.type === 'ENTER') {
+          overworldReturnPositionRef.current = player.mesh.position.clone();
           activeHouseContentRef.current = activeTriggerRef.current.houseContent ?? null;
           transitionTo('INTERIOR');
         } else if (activeTriggerRef.current.type === 'LINK') {
@@ -148,6 +154,12 @@ export default function GameCanvas() {
       const delta = clock.getDelta();
 
       if (!isLoadingRef.current) {
+        world.update?.(
+          player.mesh.position,
+          delta,
+          player.isOnGround,
+          player.collisionRadius
+        );
 
         if (!isDialogueActiveRef.current) {
           player.update(input, cameraController.yaw, mainCam, delta);

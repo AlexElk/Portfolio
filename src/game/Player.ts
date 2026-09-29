@@ -27,6 +27,7 @@ export class Player{
     private jumpHeight = 0;
     private verticalVelocity = 0;
     private isGrounded = true;
+    private groundedPlatformHeight = 0;
     private movementMode: PlayerMovementMode = 'SPHERICAL';
     private collisionSystem?: CollisionSystem;
     private collisionBody?: CollisionBody;
@@ -181,6 +182,10 @@ export class Player{
         this.flatCollisionSystem = collisionSystem;
     }
 
+    public get isOnGround(): boolean {
+        return this.isGrounded;
+    }
+
     public update(input: InputHandler | null, cameraYaw: number, camera?: THREE.Camera, delta: number = 0.016){
         const isMoving = Boolean(
             input?.keys.w || input?.keys.a || input?.keys.s || input?.keys.d
@@ -193,6 +198,7 @@ export class Player{
 
         if (input?.consumeJumpPress() && this.isGrounded) {
             this.isGrounded = false;
+            this.groundedPlatformHeight = 0;
             this.verticalVelocity = this.minimumJumpVelocity;
         }
         this.updateVerticalMotion(input?.jumpHeld ?? false);
@@ -386,9 +392,23 @@ export class Player{
             this.collisionRadius
         ) ?? 0;
 
-        if (this.isGrounded && this.jumpHeight > supportHeight + 0.01) {
-            this.isGrounded = false;
-            this.verticalVelocity = 0;
+        if (this.isGrounded) {
+            if (this.groundedPlatformHeight > 0 && supportHeight > 0) {
+                this.jumpHeight = supportHeight;
+                this.groundedPlatformHeight = supportHeight;
+                return;
+            }
+
+            if (this.jumpHeight > supportHeight + 0.01) {
+                this.isGrounded = false;
+                this.groundedPlatformHeight = 0;
+                this.verticalVelocity = 0;
+                return;
+            }
+
+            if (supportHeight > 0 && Math.abs(this.jumpHeight - supportHeight) <= 0.02) {
+                this.groundedPlatformHeight = supportHeight;
+            }
             return;
         }
 
@@ -396,6 +416,7 @@ export class Player{
             this.jumpHeight = supportHeight;
             this.verticalVelocity = 0;
             this.isGrounded = true;
+            this.groundedPlatformHeight = supportHeight;
         }
     }
 }

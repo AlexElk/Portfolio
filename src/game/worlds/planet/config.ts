@@ -90,7 +90,7 @@ export const projectPlatformConfig = {
 
 const pathPlatformCount = 3;
 const pathPlatformLatitude = -Math.PI / 4;
-const pathPlatformHeight = 1.2;
+const pathPlatformHeight = 4;
 
 export const pathPlatformConfig: PlatformConfig[] = Array.from(
   { length: pathPlatformCount },
@@ -115,20 +115,60 @@ export const pathPlatformConfig: PlatformConfig[] = Array.from(
   }
 );
 
-const platformGuide = {
-  name: 'Platform guide',
-  lines: [
-    'These platforms sit halfway between the south pole and equator.',
-    'Hold Space to jump higher and reach the next one.',
-    'Try not to fall.',
-  ],
+export const southPoleLiftConfig: PlatformConfig = {
+  id: 'south-pole-lift',
+  direction: new THREE.Vector3(0, -1, 0),
+  width: 3.2,
+  depth: 3.2,
+  collisionWidth: 1.4,
+  collisionDepth: 1.4,
+  height: 0.6,
+  thickness: 0.45,
+  color: 0xb58146,
 };
+
+export const southPoleLiftNpcConfig: Omit<NPCConfig, 'planetRadius'> = {
+  id: 'south-pole-lift-guide',
+  name: 'The Lookout',
+  lines: [
+    'You made it all the way to the southern pole.',
+    'The lift can carry you back down whenever you are ready.',
+  ],
+  direction: new THREE.Vector3(0.05, -1, 0),
+  heightOffset: (southPoleLiftConfig.height ?? 0.6) + 42 + 0.5,
+  size: 0.8,
+  color: 0x55eaff,
+};
+
+const platformGuides = [
+  {
+    name: 'The Ascent',
+    lines: [
+      'These platforms trace a route up from the southern hemisphere.',
+      'Hold Space while jumping to gain enough height for the next one.',
+    ],
+  },
+  {
+    name: 'The Navigator',
+    lines: [
+      'The next platform is farther around the planet than it looks.',
+      'Keep moving along the curve and use the horizon to line up your jump.',
+    ],
+  },
+  {
+    name: 'The Safety Check',
+    lines: [
+      'Miss a landing and you will fall back onto the planet.',
+      'Take your time; the platforms are spaced to be reached one at a time.',
+    ],
+  },
+];
 
 export const npcConfigs: Omit<NPCConfig, 'planetRadius'>[] = pathPlatformConfig.map(
   (platform, index) => ({
     id: `platform-guide-${index}`,
     direction: platform.direction,
     heightOffset: (platform.height ?? 1) + 0.5,
-    ...platformGuide,
+    ...platformGuides[index],
   })
 );

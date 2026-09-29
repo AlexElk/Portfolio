@@ -10,6 +10,8 @@ import {
   planetConfig,
   projectDirections,
   projects,
+  southPoleLiftConfig,
+  southPoleLiftNpcConfig,
 } from './config';
 
 const projectFigureHeight = 0.8;
@@ -153,19 +155,33 @@ export const planetWorld: WorldDefinition = {
       });
     });
 
+    const platforms: Platform[] = [];
     pathPlatformConfig.forEach((config) => {
       const platform = new Platform({
         ...config,
         planetRadius: planetConfig.radius,
       }, collisionSystem);
       scene.add(platform.mesh);
+      platforms.push(platform);
     });
+    const southPoleLift = new Platform({
+      ...southPoleLiftConfig,
+      planetRadius: planetConfig.radius,
+    }, collisionSystem);
+    scene.add(southPoleLift.mesh);
+    let southPoleLiftStarted = false;
 
     const npcData = npcConfigs.map((config) => {
       const npc = new NPC({ ...config, planetRadius: planetConfig.radius }, collisionSystem);
       scene.add(npc.mesh);
       return npc.data;
     });
+    const southPoleLiftNpc = new NPC({
+      ...southPoleLiftNpcConfig,
+      planetRadius: planetConfig.radius,
+    }, collisionSystem);
+    scene.add(southPoleLiftNpc.mesh);
+    npcData.push(southPoleLiftNpc.data);
     const dialogueHologramData = dialogueHologramConfigs.map((config, index) => {
       const npc = new NPC({ ...config, planetRadius: planetConfig.radius }, collisionSystem);
       scene.add(npc.mesh);
@@ -175,6 +191,53 @@ export const planetWorld: WorldDefinition = {
       };
     });
 
-    return { triggers, npcData: [...npcData, ...dialogueHologramData] };
+    return {
+      triggers,
+      npcData: [...npcData, ...dialogueHologramData],
+      update(playerPosition, delta, playerIsGrounded, playerCollisionRadius) {
+        pathPlatformConfig.forEach((config, index) => {
+          const distance = playerPosition.distanceTo(npcData[index].position);
+          const proximity = 1 - THREE.MathUtils.clamp((distance - 1.8) / 3.2, 0, 1);
+          const easedProximity = proximity * proximity * (3 - 2 * proximity);
+          const initialHeight = config.height ?? 1;
+          const targetHeight = THREE.MathUtils.lerp(initialHeight, 0.5, easedProximity);
+          const height = THREE.MathUtils.damp(
+            platforms[index].collider.height,
+            targetHeight,
+            5,
+            delta
+          );
+
+          platforms[index].setHeight(height);
+          npcData[index].position.copy(config.direction).normalize()
+            .multiplyScalar(planetConfig.radius + height + 0.5);
+        });
+
+        const liftCollider = southPoleLift.collider;
+        const playerNormal = playerPosition.clone().normalize();
+        const liftOffset = playerNormal.clone().sub(liftCollider.normal)
+          .multiplyScalar(planetConfig.radius);
+        const liftLocalX = liftOffset.dot(liftCollider.right);
+        const liftLocalZ = liftOffset.dot(liftCollider.forward);
+        const isOverLift = playerNormal.dot(liftCollider.normal) > 0
+          && Math.abs(liftLocalX) <= liftCollider.width / 2 + playerCollisionRadius
+          && Math.abs(liftLocalZ) <= liftCollider.depth / 2 + playerCollisionRadius;
+        const playerHeight = playerPosition.length() - planetConfig.radius - 0.5;
+        const isStandingOnLift = playerIsGrounded
+          && isOverLift
+          && Math.abs(playerHeight - liftCollider.height) <= 0.08;
+
+        if (isStandingOnLift) southPoleLiftStarted = true;
+        if (southPoleLiftStarted) {
+          const initialHeight = southPoleLiftConfig.height ?? 0.6;
+          const targetHeight = isOverLift ? initialHeight + 42 : initialHeight;
+          const heightChange = delta * 12;
+          const nextHeight = targetHeight > liftCollider.height
+            ? Math.min(liftCollider.height + heightChange, targetHeight)
+            : Math.max(liftCollider.height - heightChange, targetHeight);
+          southPoleLift.setHeight(nextHeight);
+        }
+      },
+    };
   },
 };

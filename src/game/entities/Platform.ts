@@ -7,6 +7,8 @@ export interface PlatformConfig {
   planetRadius?: number;
   width?: number;
   depth?: number;
+  collisionWidth?: number;
+  collisionDepth?: number;
   height?: number;
   thickness?: number;
   color?: number;
@@ -15,6 +17,9 @@ export interface PlatformConfig {
 export class Platform {
   public readonly mesh: THREE.Mesh;
   public readonly collider: PlatformBody;
+  private readonly normal: THREE.Vector3;
+  private readonly planetRadius: number;
+  private readonly thickness: number;
 
   constructor(config: PlatformConfig, collisionSystem: CollisionSystem) {
     const planetRadius = config.planetRadius ?? 10;
@@ -23,7 +28,10 @@ export class Platform {
     const height = config.height ?? 1;
     const thickness = config.thickness ?? 0.35;
     const color = config.color ?? 0x886644;
-    const normal = config.direction.clone().normalize();
+    this.normal = config.direction.clone().normalize();
+    this.planetRadius = planetRadius;
+    this.thickness = thickness;
+    const normal = this.normal;
     const reference = Math.abs(normal.y) > 0.95
       ? new THREE.Vector3(1, 0, 0)
       : new THREE.Vector3(0, 1, 0);
@@ -45,10 +53,16 @@ export class Platform {
       normal,
       right,
       forward,
-      width,
-      depth,
+      width: config.collisionWidth ?? width,
+      depth: config.collisionDepth ?? depth,
       height,
       planetRadius,
     });
+  }
+
+  public setHeight(height: number): void {
+    this.collider.height = height;
+    this.mesh.position.copy(this.normal)
+      .multiplyScalar(this.planetRadius + height - this.thickness / 2);
   }
 }

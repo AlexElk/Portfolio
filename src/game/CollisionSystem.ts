@@ -56,6 +56,7 @@ export class CollisionSystem {
 
     for (const platform of this.platforms.values()) {
       if (platform.planetRadius !== planetRadius) continue;
+      if (playerNormal.dot(platform.normal) <= 0) continue;
 
       const offset = playerNormal.clone()
         .sub(platform.normal)
