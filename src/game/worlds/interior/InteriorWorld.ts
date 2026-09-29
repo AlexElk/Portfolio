@@ -52,7 +52,15 @@ export const interiorWorld: WorldDefinition = {
         }] : []),
       ],
       npcData: [],
-      bounds: interiorConfig.bounds,
+      player: {
+        spawnPosition: new THREE.Vector3(0, 0.5, 2),
+        movement: { type: 'FLAT', bounds: interiorConfig.bounds },
+      },
+      camera: {
+        mode: 'FLAT',
+        position: new THREE.Vector3(0, 5.5, 8),
+        target: new THREE.Vector3(0, 0.8, 0),
+      },
     };
   },
 };

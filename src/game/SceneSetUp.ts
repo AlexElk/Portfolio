@@ -9,6 +9,7 @@ export function createScene(container: HTMLElement)
 
     const VIRTUAL_WIDTH = 256;
     const VIRTUAL_HEIGHT = 224;
+    const HOLOGRAM_SCALE = 4;
 
     const camera = new THREE.PerspectiveCamera(
         75,
@@ -21,6 +22,10 @@ export function createScene(container: HTMLElement)
 
     const renderer = new THREE.WebGLRenderer({antialias: false});
     renderer.setSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, false);
+
+    const hologramRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    hologramRenderer.setSize(VIRTUAL_WIDTH * HOLOGRAM_SCALE, VIRTUAL_HEIGHT * HOLOGRAM_SCALE, false);
+    hologramRenderer.setClearColor(0x000000, 0);
 
     const canvas = renderer.domElement;
 
@@ -39,7 +44,32 @@ export function createScene(container: HTMLElement)
     canvas.style.setProperty('image-rendering', '-moz-crisp-edges');
     canvas.style.setProperty('image-rendering', '-webkit-optimize-contrast');
 
+    const hologramCanvas = hologramRenderer.domElement;
+    hologramCanvas.style.position = 'absolute';
+    hologramCanvas.style.top = '50%';
+    hologramCanvas.style.left = '50%';
+    hologramCanvas.style.transform = 'translate(-50%, -50%)';
+    hologramCanvas.style.width = '100%';
+    hologramCanvas.style.height = '100%';
+    hologramCanvas.style.objectFit = 'contain';
+    hologramCanvas.style.pointerEvents = 'none';
+    hologramCanvas.style.zIndex = '1';
+
     container.appendChild(renderer.domElement);
+    container.appendChild(hologramCanvas);
+
+    const renderHolograms = (scene: THREE.Scene, camera: THREE.Camera) => {
+        const previousBackground = scene.background;
+        const previousLayerMask = camera.layers.mask;
+        try {
+            scene.background = null;
+            camera.layers.set(1);
+            hologramRenderer.render(scene, camera);
+        } finally {
+            scene.background = previousBackground;
+            camera.layers.mask = previousLayerMask;
+        }
+    };
 
     //Light
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -60,9 +90,11 @@ export function createScene(container: HTMLElement)
     const cleanup = () => {
         window.removeEventListener('resize', HandleResize);
         container.removeChild(renderer.domElement);
+        container.removeChild(hologramCanvas);
         renderer.dispose();
+        hologramRenderer.dispose();
 
     };
 
-    return { scene, camera, renderer, cleanup};
+    return { scene, camera, renderer, renderHolograms, cleanup};
 }

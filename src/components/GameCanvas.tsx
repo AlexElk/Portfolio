@@ -9,19 +9,17 @@ import { Player } from '../game/Player';
 import { CameraController } from '../game/CameraController';
 import { CollisionSystem } from '../game/CollisionSystem';
 import { FlatCollisionSystem } from '../game/FlatCollisionSystem';
-import { worldRegistry, InteractionTrigger, NPCData, HouseContent } from '../game/worlds';
+import { worldRegistry, InteractionTrigger, NPCData, HouseContent, WorldId } from '../game/worlds';
 import TouchControls from './TouchControls';
 import MenuOverlay from './MenuOverlay';
 import InteractionPrompt from './InteractionPrompt';
 import DialogueBox from './DialogueBox';
 
-type SceneState = 'MENU' | 'OVERWORLD' | 'INTERIOR';
-
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Estados del juego
-  const [sceneState, setSceneState] = useState<SceneState>('OVERWORLD');
+  const [sceneState, setSceneState] = useState<WorldId>('OVERWORLD');
   const [isLoading, setIsLoading] = useState(true);
   const isLoadingRef = useRef(true);
   const [inputHandler, setInputHandler] = useState<InputHandler | null>(null);
@@ -79,7 +77,7 @@ export default function GameCanvas() {
       finishLoading();
     }, 500);
 
-    const { scene, camera: mainCam, renderer, cleanup: cleanupScene } = createScene(containerRef.current);
+    const { scene, camera: mainCam, renderer, renderHolograms, cleanup: cleanupScene } = createScene(containerRef.current);
     const input = new InputHandler();
     const collisionSystem = new CollisionSystem();
     const player = new Player(collisionSystem);
@@ -91,36 +89,29 @@ export default function GameCanvas() {
     setCamera(mainCam);
     setInputHandler(input);
 
-    let triggers: InteractionTrigger[] = [];
-    let npcData: NPCData[] = [];
+    const world = worldRegistry.build(sceneState, { scene, collisionSystem }, {
+      houseContent: activeHouseContentRef.current ?? undefined,
+    });
+    const triggers: InteractionTrigger[] = world.triggers;
+    const npcData: NPCData[] = world.npcData;
 
-    // Cargar elementos 3D según el estado actual
-    if (sceneState === 'OVERWORLD') {
-      scene.add(player.mesh);
-      const res = worldRegistry.build('OVERWORLD', { scene, collisionSystem });
-      triggers = res.triggers;
-      npcData = res.npcData;
-    } else {
-      player.mesh.position.set(0, 0.5, 2); // Posición de entrada
-      const interior = worldRegistry.build('INTERIOR', { scene, collisionSystem }, {
-        houseContent: activeHouseContentRef.current ?? undefined,
-      });
-      if (!interior.bounds) throw new Error('The interior world must define flat movement bounds.');
-      player.setFlatMovement(new FlatCollisionSystem(interior.bounds));
-      cameraController.setMode('FLAT');
-      cameraController.setFlatView(
-        new THREE.Vector3(0, 5.5, 8),
-        new THREE.Vector3(0, 0.8, 0)
-      );
-      scene.add(player.mesh);
-      triggers = interior.triggers;
+    if (world.player?.spawnPosition) {
+      player.mesh.position.copy(world.player.spawnPosition);
     }
+    if (world.player?.movement?.type === 'FLAT') {
+      player.setFlatMovement(new FlatCollisionSystem(world.player.movement.bounds));
+    }
+    if (world.camera?.mode === 'FLAT') {
+      cameraController.setMode('FLAT');
+      cameraController.setFlatView(world.camera.position, world.camera.target);
+    }
+    if (world.player?.visible !== false) scene.add(player.mesh);
 
     // Sobrescribir la acción de la tecla E
     input.setActionHandler(() => {
       if (isLoadingRef.current || isDialogueActiveRef.current) return;
 
-      const transitionTo = (nextState: SceneState) => {
+      const transitionTo = (nextState: WorldId) => {
         isLoadingRef.current = true;
         setIsLoading(true);
         setSceneState(nextState);
@@ -169,6 +160,9 @@ export default function GameCanvas() {
         let closestNpcDistance = 1.8;
         for (const candidate of npcData) {
           const distanceToNpc = player.mesh.position.distanceTo(candidate.position);
+          if (candidate.projection) {
+            candidate.projection.visible = distanceToNpc < 2.6;
+          }
           if (distanceToNpc < closestNpcDistance) {
             closestNpc = candidate;
             closestNpcDistance = distanceToNpc;
@@ -217,6 +211,7 @@ export default function GameCanvas() {
 
 
       renderer.render(scene, mainCam);
+      renderHolograms(scene, mainCam);
     };
 
     animate();

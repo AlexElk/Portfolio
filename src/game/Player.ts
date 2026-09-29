@@ -198,7 +198,7 @@ export class Player{
         this.updateVerticalMotion(input?.jumpHeld ?? false);
 
         if (this.movementMode === 'FLAT') {
-            this.updateFlat(input, cameraYaw);
+            this.updateFlat(input, cameraYaw, camera);
             return;
         }
 
@@ -302,7 +302,11 @@ export class Player{
 
     
 
-    private updateFlat(input: InputHandler | null, cameraYaw: number): void {
+    private updateFlat(
+        input: InputHandler | null,
+        cameraYaw: number,
+        camera?: THREE.Camera
+    ): void {
         if (!this.flatCollisionSystem) return;
 
         const inputVector = new THREE.Vector2(
@@ -315,15 +319,11 @@ export class Player{
         }
 
         inputVector.normalize();
-        const forward = new THREE.Vector3(0, 0, -1)
-            .applyQuaternion(this.mesh.quaternion);
+        const forward = new THREE.Vector3(0, 0, -1);
+        camera?.getWorldDirection(forward);
         forward.y = 0;
         if (forward.lengthSq() < 1e-6) {
-            forward.set(
-                Math.sin(cameraYaw),
-                0,
-                -Math.cos(cameraYaw)
-            );
+            forward.set(Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
         }
         forward.normalize();
         const right = new THREE.Vector3()

@@ -14,6 +14,6 @@ export const menuWorld: WorldDefinition = {
     menuCube.position.set(0, 1.2, 0);
     scene.add(menuCube);
 
-    return { triggers: [], npcData: [] };
+    return { triggers: [], npcData: [], player: { visible: false } };
   },
 };

@@ -18,6 +18,7 @@ export interface NPCData {
   position: THREE.Vector3;
   name: string;
   lines: string[];
+  projection?: THREE.Object3D;
 }
 
 export class NPC {

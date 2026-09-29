@@ -26,7 +26,16 @@ export interface WorldOptions {
 export interface WorldBuildResult {
   triggers: InteractionTrigger[];
   npcData: NPCData[];
-  bounds?: FlatBounds;
+  player?: {
+    visible?: boolean;
+    spawnPosition?: THREE.Vector3;
+    movement?: { type: 'FLAT'; bounds: FlatBounds };
+  };
+  camera?: {
+    mode: 'FLAT';
+    position: THREE.Vector3;
+    target: THREE.Vector3;
+  };
 }
 
 export interface WorldDefinition {
