@@ -50,8 +50,8 @@ const dialogueHologramContent = [
   {
     name: 'Platforming',
     lines: [
-      'Brown platforms spiral up from the south pole.',
-      'Hold Space while jumping to reach the next platform.',
+      'Three brown platforms sit halfway between the south pole and equator.',
+      'Hold Space while jumping to reach them.',
     ],
   },
   {
@@ -88,67 +88,47 @@ export const projectPlatformConfig = {
   color: 0x287b83,
 };
 
-const pathPlatformCount = 12;
-const pathPlatformCenterSeparation = 5.2;
-const pathPlatformStartHeight = 1.2;
-const pathPlatformHeightSpan = 2.64;
-const pathPlatformVerticalSpan = 7.15;
-const pathPlatformStartY = -(planetConfig.radius + pathPlatformStartHeight) * 0.94;
-let previousHorizontalRadius = 0;
-let pathAngle = 0;
+const pathPlatformCount = 3;
+const pathPlatformLatitude = -Math.PI / 4;
+const pathPlatformHeight = 1.2;
 
 export const pathPlatformConfig: PlatformConfig[] = Array.from(
   { length: pathPlatformCount },
   (_, index) => {
-    const progress = index / (pathPlatformCount - 1);
-    const height = pathPlatformStartHeight + progress * pathPlatformHeightSpan;
-    const radius = planetConfig.radius + height;
-    const centerY = pathPlatformStartY + progress * pathPlatformVerticalSpan;
-    const horizontalRadius = Math.sqrt(radius ** 2 - centerY ** 2);
-
-    if (index > 0) {
-      const verticalStep = pathPlatformVerticalSpan / (pathPlatformCount - 1);
-      const horizontalSeparation = Math.sqrt(
-        pathPlatformCenterSeparation ** 2 - verticalStep ** 2
-      );
-      const angleCosine = (
-        previousHorizontalRadius ** 2 + horizontalRadius ** 2 - horizontalSeparation ** 2
-      ) / (2 * previousHorizontalRadius * horizontalRadius);
-      pathAngle += Math.acos(THREE.MathUtils.clamp(angleCosine, -1, 1));
-    }
-
-    previousHorizontalRadius = horizontalRadius;
+    const angle = (index / pathPlatformCount) * Math.PI * 2;
+    const horizontalRadius = Math.cos(pathPlatformLatitude);
     const direction = new THREE.Vector3(
-      Math.cos(pathAngle) * horizontalRadius,
-      centerY,
-      Math.sin(pathAngle) * horizontalRadius
-    ).normalize();
+      Math.cos(angle) * horizontalRadius,
+      Math.sin(pathPlatformLatitude),
+      Math.sin(angle) * horizontalRadius
+    );
 
     return {
       id: `platform-${index}`,
       direction,
       width: 2.4,
       depth: 2.4,
-      height,
+      height: pathPlatformHeight,
       thickness: 0.35,
       color: 0x996633,
     };
   }
 );
 
-const lastPathPlatform = pathPlatformConfig[pathPlatformConfig.length - 1];
-const lastPathPlatformHeight = lastPathPlatform.height ?? 1;
+const platformGuide = {
+  name: 'Platform guide',
+  lines: [
+    'These platforms sit halfway between the south pole and equator.',
+    'Hold Space to jump higher and reach the next one.',
+    'Try not to fall.',
+  ],
+};
 
-export const npcConfigs: Omit<NPCConfig, 'planetRadius'>[] = [
-  {
-    id: 'platform-guide',
-    direction: lastPathPlatform.direction,
-    heightOffset: lastPathPlatformHeight + 0.5,
-    name: 'Platform guide',
-    lines: [
-      'The platforms follow the curve of the planet.',
-      'Hold Space to jump higher and reach the next one.',
-      'Try not to fall.',
-    ],
-  },
-];
+export const npcConfigs: Omit<NPCConfig, 'planetRadius'>[] = pathPlatformConfig.map(
+  (platform, index) => ({
+    id: `platform-guide-${index}`,
+    direction: platform.direction,
+    heightOffset: (platform.height ?? 1) + 0.5,
+    ...platformGuide,
+  })
+);

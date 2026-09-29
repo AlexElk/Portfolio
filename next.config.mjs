@@ -1,5 +1,5 @@
 const isProd = process.env.NODE_ENV === 'production';
-const basePath = isProd ? '/dev-portfolio' : '';
+const basePath = isProd ? '/Portfolio' : '';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
