@@ -125,7 +125,7 @@ export default function TouchControls({input}: TouchControlProps)
         <style jsx>{`
             .touch-overlay {
             position: absolute;
-            bottom: 24px;
+            bottom: calc(48px + env(safe-area-inset-bottom, 0px));
             left: 0;
             right: 0;
             display: flex;
