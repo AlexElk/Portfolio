@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { CollisionSystem } from './CollisionSystem';
 import { FlatBounds } from './FlatCollisionSystem';
-import { House, HouseContent } from './entities/House';
+import { HouseContent } from './entities/House';
 import { NPC } from './entities/NPC';
 import { Platform } from './entities/Platform';
-import { plane } from 'three/examples/jsm/Addons.js';
 import { publicAssetUrl } from './assets';
 
 export type { NPCData } from './entities/NPC';
@@ -15,6 +14,7 @@ export interface HouseTrigger {
   promptPosition: THREE.Vector3;
   type: 'ENTER' | 'EXIT' | 'LINK';
   houseContent?: HouseContent;
+  projection?: THREE.Object3D;
 }
 
 export function alignToSphere(
@@ -62,7 +62,7 @@ export function setupOverworldScene(scene: THREE.Scene, collisionSystem: Collisi
   const planet = new THREE.Mesh(planetGeo, planetMat);
   scene.add(planet);
   
-  const houseDirections = Array.from({ length: 10 }, (_, index) => {
+  const projectDirections = Array.from({ length: 10 }, (_, index) => {
     const angle = (index / 10) * Math.PI * 2;
     return new THREE.Vector3(
       Math.cos(angle),
@@ -72,27 +72,65 @@ export function setupOverworldScene(scene: THREE.Scene, collisionSystem: Collisi
   });
 
   const triggers: HouseTrigger[] = [];
+  const projectionLoader = new THREE.TextureLoader();
 
-  houseDirections.forEach((dir, index) => {
+  projectDirections.forEach((direction, index) => {
     const houseContent: HouseContent = {
-      name: `House ${index + 1}`,
+      name: `Project ${index + 1}`,
       interiorColor: [0xff5555, 0xff9955, 0xffdd55, 0x88cc66, 0x44bb99,
         0x55aadd, 0x7777dd, 0xaa66cc, 0xdd66aa, 0xcc8866][index],
       url: 'https://github.com',
+      imageUrl: `/images/projections/project-${String(index + 1).padStart(2, '0')}.jpg`,
     };
-    const house = new House({
-      id: `house-${index}`,
-      direction: dir,
+
+    const platformHeight = 1.2;
+    const platform = new Platform({
+      id: `project-platform-${index}`,
+      direction,
       planetRadius: PLANET_RADIUS,
-      content: houseContent,
+      width: 2.2,
+      depth: 2.2,
+      height: platformHeight,
+      thickness: 0.3,
+      color: 0x287b83,
     }, collisionSystem);
-    scene.add(house.mesh);
+    scene.add(platform.mesh);
+
+    const projectionMaterial = new THREE.SpriteMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+    const projection = new THREE.Sprite(projectionMaterial);
+    projection.scale.set(2, 1.25, 1);
+    projection.position.copy(direction.clone().normalize())
+      .multiplyScalar(PLANET_RADIUS + platformHeight + 2.1);
+    projection.visible = false;
+    scene.add(projection);
+
+    projectionLoader.load(
+      publicAssetUrl(houseContent.imageUrl),
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        projectionMaterial.map = texture;
+        projectionMaterial.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        projectionMaterial.color.set(0x00e5ff);
+        projectionMaterial.needsUpdate = true;
+      }
+    );
 
     triggers.push({
-      position: house.triggerPosition,
-      promptPosition: house.promptPosition,
+      position: direction.clone().normalize()
+        .multiplyScalar(PLANET_RADIUS + platformHeight + 0.5),
+      promptPosition: direction.clone().normalize()
+        .multiplyScalar(PLANET_RADIUS + platformHeight + 2.7),
       type: 'ENTER',
-      houseContent: house.content,
+      houseContent,
+      projection,
     });
   });
 

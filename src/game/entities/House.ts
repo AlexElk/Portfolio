@@ -5,6 +5,7 @@ export interface HouseContent {
   name: string;
   interiorColor: number;
   url: string;
+  imageUrl: string;
 }
 
 export interface HouseConfig {

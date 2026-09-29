@@ -21,7 +21,9 @@ export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Estados del juego
-  const [sceneState, setSceneState] = useState<SceneState>('MENU');
+  const [sceneState, setSceneState] = useState<SceneState>('OVERWORLD');
+  const [isLoading, setIsLoading] = useState(true);
+  const isLoadingRef = useRef(true);
   const [inputHandler, setInputHandler] = useState<InputHandler | null>(null);
   const [camera, setCamera] = useState<THREE.Camera | null>(null); //* I might delete this
   const cameraControllerRef = useRef<CameraController | null>(null);
@@ -46,6 +48,37 @@ export default function GameCanvas() {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const loadingManager = THREE.DefaultLoadingManager;
+    const previousOnLoad = loadingManager.onLoad;
+    const previousOnStart = loadingManager.onStart;
+    let minimumLoadingElapsed = false;
+    let assetsLoaded = false;
+    let loadingStarted = false;
+    const finishLoading = () => {
+      if (!minimumLoadingElapsed || !assetsLoaded) return;
+      isLoadingRef.current = false;
+      setIsLoading(false);
+    };
+    const handleLoadingComplete = () => {
+      assetsLoaded = true;
+      previousOnLoad?.();
+      finishLoading();
+    };
+    const handleLoadingStart = (url: string, itemsLoaded: number, itemsTotal: number) => {
+      loadingStarted = true;
+      previousOnStart?.(url, itemsLoaded, itemsTotal);
+    };
+
+    if (isLoadingRef.current) {
+      loadingManager.onLoad = handleLoadingComplete;
+      loadingManager.onStart = handleLoadingStart;
+    }
+    const minimumLoadingTimer = window.setTimeout(() => {
+      minimumLoadingElapsed = true;
+      if (!loadingStarted) assetsLoaded = true;
+      finishLoading();
+    }, 500);
+
     const { scene, camera: mainCam, renderer, cleanup: cleanupScene } = createScene(containerRef.current);
     const input = new InputHandler();
     const collisionSystem = new CollisionSystem();
@@ -67,7 +100,7 @@ export default function GameCanvas() {
       const res = setupOverworldScene(scene, collisionSystem);
       triggers = res.triggers;
       npcData = res.npcData;
-    } else if (sceneState === 'INTERIOR') {
+    } else {
       player.mesh.position.set(0, 0.5, 2); // Posición de entrada
       const interior = setupInteriorScene(scene, activeHouseContentRef.current ?? undefined);
       player.setFlatMovement(new FlatCollisionSystem(interior.bounds));
@@ -82,7 +115,13 @@ export default function GameCanvas() {
 
     // Sobrescribir la acción de la tecla E
     input.setActionHandler(() => {
-        if (isDialogueActiveRef.current) return;
+      if (isLoadingRef.current || isDialogueActiveRef.current) return;
+
+      const transitionTo = (nextState: SceneState) => {
+        isLoadingRef.current = true;
+        setIsLoading(true);
+        setSceneState(nextState);
+      };
 
         if (activeNpcRef.current) {
             isDialogueActiveRef.current = true;
@@ -97,12 +136,12 @@ export default function GameCanvas() {
       if (activeTriggerRef.current) {
         if (activeTriggerRef.current.type === 'ENTER') {
           activeHouseContentRef.current = activeTriggerRef.current.houseContent ?? null;
-          setSceneState('INTERIOR');
+          transitionTo('INTERIOR');
         } else if (activeTriggerRef.current.type === 'LINK') {
           const url = activeTriggerRef.current.houseContent?.url;
           if (url) window.open(url, '_blank', 'noopener,noreferrer');
         } else if (activeTriggerRef.current.type === 'EXIT') {
-          setSceneState('OVERWORLD');
+          transitionTo('OVERWORLD');
         }
       }
     });
@@ -114,7 +153,7 @@ export default function GameCanvas() {
       clock.update();
       const delta = clock.getDelta();
 
-      if (sceneState !== 'MENU') {
+      if (!isLoadingRef.current) {
 
         if (!isDialogueActiveRef.current) {
           player.update(input, cameraController.yaw, mainCam, delta);
@@ -138,6 +177,9 @@ export default function GameCanvas() {
         let nearTrigger: HouseTrigger | null = null;
         for (const trigger of triggers) {
           const dist = player.mesh.position.distanceTo(trigger.position);
+          if (trigger.projection) {
+            trigger.projection.visible = dist < 2.6;
+          }
           if (dist < 1.5) {
             nearTrigger = trigger;
             break;
@@ -178,8 +220,15 @@ export default function GameCanvas() {
 
     return () => {
       cancelAnimationFrame(animId);
+      window.clearTimeout(minimumLoadingTimer);
       input.destroy();
       cleanupScene();
+      if (loadingManager.onLoad === handleLoadingComplete) {
+        loadingManager.onLoad = previousOnLoad;
+      }
+      if (loadingManager.onStart === handleLoadingStart) {
+        loadingManager.onStart = previousOnStart;
+      }
     };
   }, [sceneState]);
 
@@ -187,14 +236,30 @@ export default function GameCanvas() {
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', touchAction: 'none' }} />
 
-      {/* Menú Principal */}
-      {sceneState === 'MENU' && (
-        <MenuOverlay onStart={() => setSceneState('OVERWORLD')} />
+      {isLoading && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#020208',
+            color: '#ffffff',
+            fontFamily: 'monospace',
+            fontSize: '16px',
+          }}
+        >
+          loading...
+        </div>
       )}
 
       {/* Texto Flotante Reutilizable */}
       <InteractionPrompt
-        visible={promptData.visible && sceneState !== 'MENU'}
+        visible={promptData.visible && !isLoading}
         position={promptData.position}
         camera={camera}
         text={promptData.text}
@@ -216,7 +281,7 @@ export default function GameCanvas() {
       )}
 
       {/* Controles Táctiles (solo fuera del menú) */}
-      {sceneState !== 'MENU' && <TouchControls input={inputHandler} />}
+      {!isLoading && <TouchControls input={inputHandler} />}
     </div>
   );
 }
