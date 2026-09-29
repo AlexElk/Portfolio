@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import * as THREE from 'three';
-import { update } from "three/examples/jsm/libs/tween.module.js";
 
 interface InterfacePromptProps {
     position: THREE.Vector3 | null;
@@ -98,22 +97,19 @@ export default function InterfacePrompt({position, camera, text, visible}: Inter
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                background: rgba(16, 16, 20, 0.85);
-                border: 1px solid #00ff88;
+                background: #000000;
+                border: 1px solid #ffffff;
                 padding: 6px 12px;
-                border-radius: 20px;
-                backdrop-filter: blur(4px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-                animation: bounce 1.5s infinite ease-in-out;
+                border-radius: 0;
                 }
 
                 .badge {
-                background: #00ff88;
-                color: #101014;
+                background: #000000;
+                color: #ffffff;
                 font-weight: bold;
                 font-size: 11px;
                 padding: 2px 6px;
-                border-radius: 4px;
+                border-radius: 0;
                 }
 
                 .text {
@@ -122,10 +118,6 @@ export default function InterfacePrompt({position, camera, text, visible}: Inter
                 font-weight: 500;
                 }
 
-                @keyframes bounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-6px); }
-                }
             `}</style>
 
         </div>

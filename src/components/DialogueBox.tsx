@@ -102,13 +102,11 @@ export default function DialogueBox({ npcName, lines, onComplete, input }: Dialo
         }
 
         .dialogue-box {
-          background: rgba(16, 16, 20, 0.92);
-          border: 2px solid #00ff88;
-          border-radius: 12px;
+          background: #000000;
+          border: 1px solid #ffffff;
+          border-radius: 0;
           padding: 16px 20px;
-          color: white;
-          backdrop-filter: blur(8px);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+          color: #ffffff;
           min-height: 90px;
           position: relative;
         }
@@ -125,19 +123,17 @@ export default function DialogueBox({ npcName, lines, onComplete, input }: Dialo
         }
 
         .npc-name {
-          color: #00ff88;
+          color: #ffffff;
           font-weight: bold;
           font-size: 13px;
           text-transform: uppercase;
-          letter-spacing: 1px;
           margin-bottom: 8px;
         }
 
         .dialogue-text {
           font-size: 15px;
           line-height: 1.4;
-          font-family: monospace;
-          color: #e0e0e0;
+          color: #ffffff;
         }
 
         .space-indicator {
@@ -145,14 +141,8 @@ export default function DialogueBox({ npcName, lines, onComplete, input }: Dialo
           bottom: 10px;
           right: 14px;
           font-size: 11px;
-          color: #00ff88;
+          color: #ffffff;
           font-weight: bold;
-          animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
         }
       `}</style>
     </div>

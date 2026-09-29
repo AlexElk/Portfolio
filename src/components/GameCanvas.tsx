@@ -9,7 +9,7 @@ import { Player } from '../game/Player';
 import { CameraController } from '../game/CameraController';
 import { CollisionSystem } from '../game/CollisionSystem';
 import { FlatCollisionSystem } from '../game/FlatCollisionSystem';
-import { setupOverworldScene, setupInteriorScene, HouseTrigger, NPCData, HouseContent } from '../game/Scenes';
+import { worldRegistry, InteractionTrigger, NPCData, HouseContent } from '../game/worlds';
 import TouchControls from './TouchControls';
 import MenuOverlay from './MenuOverlay';
 import InteractionPrompt from './InteractionPrompt';
@@ -40,7 +40,7 @@ export default function GameCanvas() {
     text: string;
   }>({ visible: false, position: null, text: '' });
 
-  const activeTriggerRef = useRef<HouseTrigger | null>(null);
+  const activeTriggerRef = useRef<InteractionTrigger | null>(null);
   const activeNpcRef = useRef<NPCData | null>(null);
   const activeHouseContentRef = useRef<HouseContent | null>(null);
   const isDialogueActiveRef = useRef(false);
@@ -91,18 +91,21 @@ export default function GameCanvas() {
     setCamera(mainCam);
     setInputHandler(input);
 
-    let triggers: HouseTrigger[] = [];
+    let triggers: InteractionTrigger[] = [];
     let npcData: NPCData[] = [];
 
     // Cargar elementos 3D según el estado actual
     if (sceneState === 'OVERWORLD') {
       scene.add(player.mesh);
-      const res = setupOverworldScene(scene, collisionSystem);
+      const res = worldRegistry.build('OVERWORLD', { scene, collisionSystem });
       triggers = res.triggers;
       npcData = res.npcData;
     } else {
       player.mesh.position.set(0, 0.5, 2); // Posición de entrada
-      const interior = setupInteriorScene(scene, activeHouseContentRef.current ?? undefined);
+      const interior = worldRegistry.build('INTERIOR', { scene, collisionSystem }, {
+        houseContent: activeHouseContentRef.current ?? undefined,
+      });
+      if (!interior.bounds) throw new Error('The interior world must define flat movement bounds.');
       player.setFlatMovement(new FlatCollisionSystem(interior.bounds));
       cameraController.setMode('FLAT');
       cameraController.setFlatView(
@@ -174,7 +177,7 @@ export default function GameCanvas() {
         activeNpcRef.current = closestNpc;
 
         // Detectar cercanía con zonas de interacción
-        let nearTrigger: HouseTrigger | null = null;
+        let nearTrigger: InteractionTrigger | null = null;
         for (const trigger of triggers) {
           const dist = player.mesh.position.distanceTo(trigger.position);
           if (trigger.projection) {
@@ -247,13 +250,13 @@ export default function GameCanvas() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#020208',
+            background: '#000000',
             color: '#ffffff',
-            fontFamily: 'monospace',
+            fontFamily: 'Minecraft, monospace',
             fontSize: '16px',
           }}
         >
-          loading...
+          LOADING...
         </div>
       )}
 

@@ -38,30 +38,27 @@ export default function MenuOverlay({ onStart}: MenuOverlayProps){
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(10, 10, 14, 0.85);
-            backdrop-filter: blur(8px);
+            background: #000000;
             z-index: 30;
             }
 
             .menu-card {
             text-align: center;
             color: white;
-            background: rgba(255, 255, 255, 0.05);
+            background: #000000;
             padding: 40px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 0;
+            border: 1px solid #ffffff;
             }
 
             h1 {
             font-size: 36px;
             margin: 0 0 8px 0;
-            color: #00ff88;
-            letter-spacing: 2px;
+            color: #ffffff;
             }
 
             p {
-            color: #aaa;
+            color: #ffffff;
             margin-bottom: 32px;
             }
 
@@ -85,15 +82,15 @@ export default function MenuOverlay({ onStart}: MenuOverlayProps){
             }
 
             .btn-primary {
-            background: #00ff88;
-            color: #101014;
-            border: none;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #ffffff;
             }
 
             .btn-secondary {
             background: transparent;
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid #ffffff;
             }
         `}</style>
         </div>

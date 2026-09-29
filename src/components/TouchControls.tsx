@@ -153,8 +153,7 @@ export default function TouchControls({input}: TouchControlProps)
             height: 128px;
             border: 2px solid rgba(255, 255, 255, 0.45);
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.8);
             touch-action: none;
             position: relative;
             }
@@ -166,10 +165,9 @@ export default function TouchControls({input}: TouchControlProps)
             left: 50%;
             top: 50%;
             margin: -28px 0 0 -28px;
-            background: rgba(255, 255, 255, 0.2);
+            background: #000000;
             border: 2px solid rgba(255, 255, 255, 0.5);
             border-radius: 50%;
-            backdrop-filter: blur(4px);
             pointer-events: none;
             }
 
@@ -182,10 +180,11 @@ export default function TouchControls({input}: TouchControlProps)
             .btn {
             width: 64px;
             height: 64px;
-            background: rgba(255, 255, 255, 0.2);
+            background: #000000;
             border: 2px solid rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             color: white;
+            font-family: inherit;
             font-size: 10px;
             font-weight: bold;
             display: flex;
@@ -195,17 +194,17 @@ export default function TouchControls({input}: TouchControlProps)
             }
 
             .btn:active {
-            background: rgba(0, 255, 136, 0.6);
-            border-color: #00ff88;
+            background: #000000;
+            border-color: #ffffff;
             }
 
             .btn-action {
-            background: rgba(0, 255, 136, 0.3);
-            border-color: #00ff88;
+            background: #000000;
+            border-color: #ffffff;
             }
 
             .btn-jump {
-            background: rgba(255, 255, 255, 0.18);
+            background: #000000;
             }
         `}</style>
         </div>
