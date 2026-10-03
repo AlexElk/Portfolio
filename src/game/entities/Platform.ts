@@ -10,6 +10,7 @@ export interface PlatformConfig {
   collisionWidth?: number;
   collisionDepth?: number;
   height?: number;
+  collisionHeightScale?: number;
   thickness?: number;
   color?: number;
 }
@@ -57,6 +58,7 @@ export class Platform {
       depth: config.collisionDepth ?? depth,
       height,
       planetRadius,
+      collisionHeightScale: config.collisionHeightScale,
     });
   }
 

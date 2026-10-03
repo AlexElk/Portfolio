@@ -216,7 +216,10 @@ export const planetWorld: WorldDefinition = {
         const liftCollider = southPoleLift.collider;
         const playerNormal = playerPosition.clone().normalize();
         const liftOffset = playerNormal.clone().sub(liftCollider.normal)
-          .multiplyScalar(planetConfig.radius);
+          .multiplyScalar(
+            planetConfig.radius
+              + liftCollider.height * (liftCollider.collisionHeightScale ?? 0)
+          );
         const liftLocalX = liftOffset.dot(liftCollider.right);
         const liftLocalZ = liftOffset.dot(liftCollider.forward);
         const isOverLift = playerNormal.dot(liftCollider.normal) > 0

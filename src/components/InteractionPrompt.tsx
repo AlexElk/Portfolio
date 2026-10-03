@@ -34,26 +34,8 @@ export default function InterfacePrompt({position, camera, text, visible}: Inter
             const vector = position.clone();
             vector.project(camera);
 
-            const VIRTUAL_ASPECT = 256 / 224;
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const windowAspect = windowWidth / windowHeight;
-
-            let renderedWidth = windowWidth;
-            let renderedHeight = windowHeight;
-            let offsetX = 0;
-            let offsetY = 0;
-
-            if (windowAspect > VIRTUAL_ASPECT) {
-                renderedWidth = windowHeight * VIRTUAL_ASPECT;
-                offsetX = (windowWidth - renderedWidth) / 2;
-            } else {
-                renderedHeight = windowWidth / VIRTUAL_ASPECT;
-                offsetY = (windowHeight - renderedHeight) / 2;
-            }
-
-            const x = offsetX + (vector.x * 0.5 + 0.5) * renderedWidth;
-            const y = offsetY + (-(vector.y * 0.5) + 0.5) * renderedHeight;
+            const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
 
             //verify if it is behind the camera
             //const isBehind = vector.z > 1;

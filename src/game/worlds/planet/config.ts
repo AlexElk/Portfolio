@@ -122,6 +122,7 @@ export const southPoleLiftConfig: PlatformConfig = {
   depth: 3.2,
   collisionWidth: 1.4,
   collisionDepth: 1.4,
+  collisionHeightScale: 0.4,
   height: 0.6,
   thickness: 0.45,
   color: 0xb58146,

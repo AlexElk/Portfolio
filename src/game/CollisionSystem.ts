@@ -19,6 +19,7 @@ export interface PlatformBody {
   depth: number;
   height: number;
   planetRadius: number;
+  collisionHeightScale?: number;
 }
 
 export class CollisionSystem {
@@ -58,9 +59,11 @@ export class CollisionSystem {
       if (platform.planetRadius !== planetRadius) continue;
       if (playerNormal.dot(platform.normal) <= 0) continue;
 
+      const collisionRadius = planetRadius
+        + platform.height * (platform.collisionHeightScale ?? 0);
       const offset = playerNormal.clone()
         .sub(platform.normal)
-        .multiplyScalar(planetRadius);
+        .multiplyScalar(collisionRadius);
       const localX = offset.dot(platform.right);
       const localZ = offset.dot(platform.forward);
       const halfWidth = platform.width / 2 + playerRadius;

@@ -80,15 +80,25 @@ export function createScene(container: HTMLElement)
     //const grid = new THREE.GridHelper(20, 20, 0xffffff, 0x444444);
     //scene.add(grid);
 
-    const HandleResize = () => {
-        // camera.aspect = VIRTUAL_WIDTH / VIRTUAL_HEIGHT;
-        // camera.updateProjectionMatrix();
-        // renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener('resize', HandleResize);
+    const resizeObserver = new ResizeObserver(([entry]) => {
+        const { width, height } = entry.contentRect;
+        if (!width || !height) return;
+
+        const renderHeight = VIRTUAL_HEIGHT;
+        const renderWidth = Math.max(1, Math.round(renderHeight * width / height));
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(renderWidth, renderHeight, false);
+        hologramRenderer.setSize(
+            renderWidth * HOLOGRAM_SCALE,
+            renderHeight * HOLOGRAM_SCALE,
+            false
+        );
+    });
+    resizeObserver.observe(container);
 
     const cleanup = () => {
-        window.removeEventListener('resize', HandleResize);
+        resizeObserver.disconnect();
         container.removeChild(renderer.domElement);
         container.removeChild(hologramCanvas);
         renderer.dispose();
