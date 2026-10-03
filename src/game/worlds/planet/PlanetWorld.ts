@@ -5,6 +5,7 @@ import { Platform } from '../../entities/Platform';
 import type { WorldBuildResult, WorldDefinition } from '../types';
 import {
   dialogueHologramConfigs,
+  dialogueProjectionImageUrls,
   npcConfigs,
   pathPlatformConfig,
   planetConfig,
@@ -187,7 +188,11 @@ export const planetWorld: WorldDefinition = {
       scene.add(npc.mesh);
       return {
         ...npc.data,
-        projection: createDialogueProjection(scene, config.direction, projects[index].imageUrl),
+        projection: createDialogueProjection(
+          scene,
+          config.direction,
+          dialogueProjectionImageUrls[index]
+        ),
       };
     });
 

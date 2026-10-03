@@ -20,10 +20,14 @@ export const projects: HouseContent[] = projectColors.map((interiorColor, index)
   name: `Project ${index + 1}`,
   interiorColor,
   url: 'https://github.com',
-  imageUrl: `/images/projections/project-${String(index + 1).padStart(2, '0')}.jpg`,
+  imageUrl: `/images/projections/repository-${String(index + 1).padStart(2, '0')}.png`,
 }));
 
 const cardinalAngles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+
+export const dialogueProjectionImageUrls = cardinalAngles.map((_, index) =>
+  `/images/projections/project-${String(index + 1).padStart(2, '0')}.png`
+);
 
 export const projectDirections = cardinalAngles.flatMap((angle) =>
   [-1, 1].map((side) => {
@@ -122,7 +126,7 @@ export const southPoleLiftConfig: PlatformConfig = {
   depth: 3.2,
   collisionWidth: 1.4,
   collisionDepth: 1.4,
-  collisionHeightScale: 0.4,
+  collisionHeightScale: 0.3,
   height: 0.6,
   thickness: 0.45,
   color: 0xb58146,
