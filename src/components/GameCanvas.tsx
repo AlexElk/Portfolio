@@ -364,11 +364,14 @@ export default function GameCanvas() {
               text: '',
             });
           } else if (nearTrigger) {
-            // near door
+            const promptText = sceneState === 'INTERIOR' && nearTrigger.type === 'LINK'
+              ? 'Go to the project'
+              : '';
+
             setPromptData({
               visible: true,
               position: nearTrigger.promptPosition,
-              text: '',
+              text: promptText,
             });
           } else {
             // hide otherwise

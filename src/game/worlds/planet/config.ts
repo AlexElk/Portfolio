@@ -19,7 +19,7 @@ const projectColors = [
 export const projects: HouseContent[] = projectColors.map((interiorColor, index) => ({
   name: `Project ${index + 1}`,
   interiorColor,
-  url: 'https://github.com',
+  url: `https://github.com/${index + 1}`,
   imageUrl: `/images/projections/repository-${String(index + 1).padStart(2, '0')}.png`,
 }));
 
