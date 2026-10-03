@@ -182,6 +182,20 @@ export class Player{
         this.flatCollisionSystem = collisionSystem;
     }
 
+    public setPlanetRadius(radius: number): void {
+        this.planetRadius = radius;
+
+        if (this.collisionBody) {
+            this.collisionBody.surfaceRadius = radius + 0.5;
+        }
+
+        if (this.mesh.position.lengthSq() > 0) {
+            const normal = this.mesh.position.clone().normalize();
+            const targetRadius = radius + this.groundHeight + this.jumpHeight;
+            this.mesh.position.copy(normal.multiplyScalar(targetRadius));
+        }
+    }
+
     public get isOnGround(): boolean {
         return this.isGrounded;
     }

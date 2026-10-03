@@ -35,6 +35,7 @@ export interface WorldBuildResult {
   player?: {
     visible?: boolean;
     spawnPosition?: THREE.Vector3;
+    planetRadius?: number;
     movement?: { type: 'FLAT'; bounds: FlatBounds };
   };
   camera?: {

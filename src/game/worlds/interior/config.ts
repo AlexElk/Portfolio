@@ -1,4 +1,5 @@
 export const interiorConfig = {
+  planetRadius: 3.25,
   floorSize: 8,
   wallHeight: 3,
   wallThickness: 0.2,
